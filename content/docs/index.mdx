@@ -1,0 +1,37 @@
+---
+title: Introduction
+description: Intégration & déploiement continu
+---
+
+Bienvenue dans ce module de CI/CD.
+
+La CI/CD est un ensemble de pratiques (et d'outils) qui visent à automatiser et fiabiliser le cycle de vie de notre logiciel, de l'écriture du code jusqu'à sa mise en production.
+L'objectif est de répondre à deux besoins fondamentaux :
+- Aller plus vite (Vélocité) : Réduire le temps entre une idée et sa mise en production.
+- Prendre moins de risques (Fiabilité) : S'assurer que chaque changement est testé et validé automatiquement.
+
+L'idéal étant d'utiliser un workflow GIT et tout cela doit avoir lieu de manière **automatique**.    
+
+Pour cela, on divise le processus en deux grandes boucles, comme le montre ce schéma :
+
+![Boucle CI/CD](/assets/ci-cd-loop.webp)
+
+1. La Boucle de Gauche : CI (Continuous Integration)
+C'est la boucle de vérification. Son travail est de répondre à la question : "Est-ce que le code qu'on vient de pousser est de bonne qualité et ne casse rien ?".
+
+- Code : Un développeur pousse son code (git push).
+- Build : Le serveur de CI compile le code, installe les dépendances (ex: npm install).
+- Test : Le serveur lance les tests unitaires, le linting, etc. (ex: npm test).
+
+Si cette boucle échoue, le développeur reçoit un feedback immédiat (un email, un Slack) et doit corriger son code. C'est le "feedback rapide".
+
+2. La Boucle de Droite : CD (Continuous Delivery / Deployment)
+
+C'est la boucle de livraison. Une fois que la CI a validé le code, son travail est de répondre à la question : "Comment amener cette nouvelle version aux utilisateurs ?".
+- Release : La CI crée un "paquet" prêt à être déployé (un artefact, une image Docker).
+- Deploy : Ce paquet est envoyé sur un serveur (développement, staging, ou production).
+- Operate / Monitor : On surveille que l'application fonctionne bien en production.
+
+Aujourd'hui, nous allons nous concentrer sur la maîtrise avancée de ces deux boucles. 
+
+On finira sur un projet qui servira pour la notation.

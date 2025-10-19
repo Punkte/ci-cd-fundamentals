@@ -1,0 +1,14 @@
+---
+title: Sécurité et Environnements
+---
+
+Un secret (token, clé API) qui fuite dans un log est un désastre de sécurité. On ne doit jamais hardcoder de secrets. Mais comment la pipeline y accède-t-elle ?    
+
+## Secrets vs Variables :
+
+- secrets (ex: secrets.MY_TOKEN) : Écriture unique. Ne peuvent pas être lus (s'affichent en *** dans les logs). Conçus pour les clés API, mots de passe.
+- vars (ex: vars.MY_SETTING) : Nouveauté GitHub. Peuvent être lus. Conçus pour des configurations non sensibles (ex: un nom de projet, une URL de staging).
+
+## Le Concept Clé : Les Environnements
+
+En entreprise, on ne veut pas qu'une pipeline lancée depuis une branche "feature-fix-bug" puisse déployer en production.

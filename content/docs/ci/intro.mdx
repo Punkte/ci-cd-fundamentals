@@ -1,0 +1,61 @@
+---
+title: Créer un projet simple
+---
+
+
+Nous allons utiliser `vite` pour créer un projet simple.     
+
+```bash
+$ npm create vite@latest
+```
+
+L'idée est simplement d'avoir un projet que l'on puisse tester et builder pour le moment.
+
+
+```
+
+│
+◇  Project name:
+│  test-vite
+│
+◇  Select a framework:
+│  Vanilla
+│
+◇  Select a variant:
+│  TypeScript
+│
+◇  Use rolldown-vite (Experimental)?:
+│  Yes
+│
+◇  Install with npm and start now?
+│  Yes
+│
+◇  Scaffolding project in /Users/dev/test-vite...
+│
+◇  Installing dependencies with npm...
+```
+
+
+Ce qui nous interesse c'est le point d'entrée de notre application: le fichier `package.json`:    
+```bash
+$ cat test-vite/package.json 
+{
+  "name": "test-vite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "npm:rolldown-vite@7.1.14"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.1.14"
+  }
+}
+
+```

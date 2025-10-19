@@ -1,0 +1,9 @@
+{
+  "title": "TypeScript",
+  "icon": "MyIcon",
+  "pages": [
+    "index",
+    "ci"
+  ],
+  "defaultOpen": true
+}
