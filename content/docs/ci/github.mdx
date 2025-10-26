@@ -2,5 +2,188 @@
 title: Github Action
 ---
 
+## Introduction à Github actions
+Github actions permet d'automatiser les étapes de construction, de test, et de déploiement d'une application. L'ensemble du processus est défini dans un fichier `.yml` du dossier `.github/workflows` à la racine du dépôt.  
+Ce fichier contient les différentes étapes (jobs) que le pipeline suivra pour exécuter les commandes définies à chaque modification du code.
 
-bonsoir
+
+```yaml
+name: CI-CD
+on: [push]
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+  test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Run tests
+        run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Build project
+        run: npm run build
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+          retention-days: 1
+```
+
+
+### Configuration de la pipeline
+
+```yaml
+name: CI-CD
+on: [push]
+```
+La première ligne indique uniquement le nom de la pipeline.  
+La deuxième ligne indique les conditions de déclenchement de la pipeline.   
+Techniquement il est possible de déclencher une pipeline uniquement sur certains typologie de branches.  
+
+
+### Jobs
+
+Les étapes de la pipeline sont définies sous la clé `jobs`
+
+
+#### install
+Dans ce job on va simplement installer les dépendances.
+```yaml
+install:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Install dependencies
+      run: npm install
+```
+
+On peut les mettres dans un cache en utilisant l'action `action/cache@v4`. Celà nous servira à réutiliser le cache dans les jobs suivants.   
+```yaml
+- name: Cache node_modules
+  uses: actions/cache@v4
+  with:
+    path: node_modules
+    key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+```
+
+#### test
+Ce job est dépendant du job d'install précédent donc il faut le mentionner:   
+
+```yaml
+test:
+  runs-on: ubuntu-latest
+  needs: install
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Restore node_modules cache # <----- Ici on récupère le cache du job précédent
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }} # en définissant la clé de cache
+
+    - name: Run tests # et enfin on lance les tests
+        run: npm run test
+```
+
+
+#### build
+
+Dans ce job on va build le projet et l'upload pour qu'il soit disponible:   
+
+```yaml
+  build:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Build project
+        run: npm run build
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4 # <--- ici on upload les artéfacts de build
+        with:
+          name: build
+          path: dist/
+          retention-days: 1
+
+```

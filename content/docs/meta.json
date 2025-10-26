@@ -3,7 +3,8 @@
   "icon": "MyIcon",
   "pages": [
     "index",
-    "ci"
+    "ci",
+    "cd"
   ],
   "defaultOpen": true
 }

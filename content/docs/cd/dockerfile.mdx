@@ -1,0 +1,116 @@
+---
+title: Dockerfile
+---
+
+# Dockerizer un projet Vite
+Nous savons maintenant lancer un serveur Nginx vide. La question est : "Comment mettre notre application React/Vite dedans ?"
+
+Pour cela, nous devons créer notre propre image. Nous allons écrire la "recette" dans un fichier spécial : le Dockerfile.
+
+### La commande `docker build`
+Pour construire une image, nous utiliserons la commande docker build.
+Son rôle est de lire un Dockerfile et exécuter les instructions pour créer une image.
+
+### Syntaxe 
+```bash 
+$ docker build -t <nom-de-limage> <contexte>`
+```
+## Le .dockerignore (L'anti-oubli)
+
+Tout comme le `.gitignore`, le `.dockerignore` empêche Docker de copier des fichiers inutiles (comme node_modules local) dans notre image, ce qui accélère le build.
+
+Créez un fichier `.dockerignore` à la racine de votre projet :
+
+```
+# Dépendances locales
+node_modules
+
+# Fichiers de build locaux
+dist
+.npm
+
+# Logs et divers
+npm-debug.log
+.DS_Store
+README.md
+```
+
+## L'approche naïve
+
+Créons notre premier `Dockerfile`.     
+
+```docker
+#  NE PAS utiliser en production
+FROM node:24
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# On expose le port par défaut de "vite preview"
+EXPOSE 4173
+
+# On utilise le serveur de preview (pas fait pour la prod !)
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
+```
+
+
+On peut alors build et run ce container en lançant la commande suivante:
+```
+$ docker build -t react-node -f ./Dockerfile.bad .
+$ docker run -d -p 3002:4173 --name react-naive-container react-node
+```
+
+Si vous ouvrez `http://localhost:3002`, ça marche. Alors, où est le problème ?
+* **Taille :** Lancez `docker images react-node`. L'image est énorme (**> 1Go**). Elle contient tout Node.js, `npm`, et toutes vos `devDependencies`.
+* **Sécurité :** L'image contient tout votre code source et vos outils de build.
+* **Performance :** On utilise `vite preview`, un serveur de test, pas un vrai serveur de production.
+
+Stoppons le container et supprimons le:   
+
+```
+**Nettoyage :**
+```bash
+$ docker stop react-naive-container && docker rm react-naive-container
+```
+
+## Le multi stage    
+
+L'idée ici va être de créer une image en passant par 2 étapes de build.    
+
+Dans un fichier `Dockerfile`:    
+
+
+```docker
+FROM node:24 as build
+
+WORKDIR /usr/src/app
+
+COPY package*.json .
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM nginx:1.29.2
+
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+
+EXPOSE 80
+```
+
+
+Puis comme tout à l'heure:    
+
+```bash
+$ docker build -t react-nginx . 
+$ docker run -d -p 3000:80 --name react-nginx-container react-nginx
+```

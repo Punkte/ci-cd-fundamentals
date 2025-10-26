@@ -1,0 +1,96 @@
+---
+title: Gitlab CI
+---
+## Introduction à GitLab CI/CD
+GitLab CI/CD permet d'automatiser les étapes de construction, de test, et de déploiement d'une application. L'ensemble du processus est défini dans un fichier .gitlab-ci.yml à la racine du dépôt.  
+Ce fichier contient les différentes étapes (stages) que le pipeline suivra pour exécuter les commandes définies à chaque modification du code.
+
+```yaml
+image: node:latest
+cache:
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - .npm/
+before_script:
+  - npm ci --cache .npm --prefer-offline
+stages:
+  - ci
+test:
+  stage: ci
+  script: npm test
+build:
+  stage: ci
+  script: npm run build
+  artifacts:
+    paths:
+      - dist/
+```
+
+### L'image Docker
+
+```yaml
+image: node:latest
+```
+Cette ligne indique à GitLab CI d'utiliser une image Docker basée sur Node.js. Cela signifie que toutes les étapes de la pipeline s'exécuteront dans un environnement Node.js.
+
+
+### stages
+
+```yaml
+stages:
+  - test
+```
+Les `stages` définissent l'ordre d'exécution des jobs. Ici, nous n'avons qu'un seul stage nommé `ci`.  
+Les jobs placés dans le même stage s'exécutent en parallèle, ce qui est plus rapide.
+
+
+#### install avec cache
+
+```yaml
+cache:
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - .npm/
+before_script:
+  - npm ci --cache .npm --prefer-offline
+```
+
+- `cache`: Indique à GitLab de sauvegarder des fichiers entre les exécutions 
+- `key.files`: Crée une "clé" de cache unique basée sur le contenu du package-lock.json. Si ce fichier ne change pas, GitLab réutilisera l'ancien cache.
+- `paths: - .npm/`: Indique quel dossier sauvegarder (le cache interne de npm).
+- `before_script`: Définit une commande qui sera exécutée avant chaque job de la pipeline.
+
+Chaque job (test, build) aura ses `node_modules` installés quasi-instantanément.
+
+
+#### test
+
+```yaml
+vitest:
+  stage: test
+  script:
+    - npm run test
+```
+
+- `stage: test` : Cette étape correspond à la phase de tests.
+- `script`: npm run test : Cette commande exécute les tests définis dans le projet Node.js, ici à l'aide de Vitest.
+
+#### build
+
+```yaml
+build:
+  stage: ci
+  script: npm run build
+  artifacts:
+    paths:
+      - dist/
+```
+
+- `stage`: ci : Ce job appartient aussi au stage ci et s'exécutera donc en parallèle du job test.  
+- `script`: npm run build : Lance le processus de build de l'application.  
+- `artifacts` : C'est le résultat de notre travail.  
+- `paths: - dist/` : Indique à GitLab de sauvegarder le dossier `dist/` (qui contient notre application buildée) une fois le job terminé. Cet artefact pourra être téléchargé ou utilisé par un futur job de déploiement. On peut aussi le consulter dans l'UI de Gitlab par ailleurs.  

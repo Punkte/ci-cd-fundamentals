@@ -1,0 +1,106 @@
+---
+title: Build & Package
+---
+
+# Build
+
+Vercel c'est bien, mais ce qui est encore mieux c'est de comprendre ce qu'il se passe derrière.   
+Si vous écrivez votre CI-CD pour vercel, celle ci ne fonctionnera que pour cette plateforme.    
+
+Cessons d'être dépendant et faisons les choses nous même.   
+
+## Le problème 
+- Votre pipeline deploy-vercel ne fonctionne que pour Vercel.
+- Si demain votre client vous dit : "Je veux déployer cette calculatrice sur mon cloud privé AWS", "sur nos serveurs Azure", ou "sur mon serveur on-premise", votre CI-CD n'est que partiellement fonctionelle. Vous devez tout refaire pour faire du sur mesure.
+- Vous ne maîtrisez pas l'environnement d'exécution. Vous ne savez pas quelle version de Node est utilisée par Vercel, ni comment le serveur web est configuré.
+
+## Package
+
+Pour résoudre ce problème, nous devons séparer la Construction du Déploiement.
+
+Notre CI ne doit pas déployer sur Vercel. Elle doit build un "package" standardisé, qui peut s'exécuter n'importe où: sur votre PC, sur AWS, chez Azure ou même sur un Raspberry.    
+On parle alors d'image de votre application. Une image docker.   
+
+
+### Concepts clés
+- Image Docker : C'est un "plan" ou une "recette". C'est un fichier léger, immuable, qui contient tout ce dont l'application a besoin pour s'exécuter : le code, les dépendances, le serveur web (Nginx), et les configurations.
+- Conteneur Docker : C'est une instance en cours d'exécution de votre image. C'est une "boîte" isolée qui fait tourner votre application. Vous pouvez lancer 10 conteneurs à partir de la même image.
+
+### Installation
+Pour travailler avec Docker, vous avez besoin de Docker Desktop. C'est une application qui gère tout pour vous (le moteur Docker, l'interface graphique, etc.).   
+Lien d'installation : https://www.docker.com/products/docker-desktop/  
+Installez-le et assurez-vous qu'il est en cours d'exécution en lancant la commande suivante:   
+
+```bash
+$ docker run hello-world
+```
+
+### Lancer un container sur votre machine locale    
+
+Vous pouvez utiliser l'image nginx pour la lancer sur votre machine:   
+```bash
+$ docker run nginx
+```
+
+Ok super mais comment accéder à ce serveur?    
+
+En fait un container est par défaut isolé pour le lancer il faut mapper le port du container qui est exposé par l'applicatif à l'un des ports de votre machine.    
+
+On peut visualiser la liste des containers lancé en lancant la commande suivante 
+
+```bash
+$  docker ps -a
+CONTAINER ID   IMAGE      COMMAND                  CREATED          STATUS                     PORTS                  NAMES
+ddac5160c10e   nginx      "/docker-entrypoint.…"   23 seconds ago   Up 22 seconds              80/tcp                 angry_mccarthy
+```
+Dans notre cas on remarque que docker a donné un nom à notre container.
+
+On va donc stopper et supprimer le container avec les commandes `stop` et `rm`
+```bash
+$ docker stop ddac5160c10e
+$ docker rm ddac5160c10e
+```
+
+
+Puis relancer la commande en mappant le port du container nginx au port 1234 de notre machine.    
+
+
+```bash
+$ docker run -p 1234:80 nginx
+```
+
+
+On remarque alors que le serveur se lance comme tout à l'heure mais il est bien mappé sur notre machine:   
+
+```bash
+$ curl http://localhost:1234
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+
+
+
+
+

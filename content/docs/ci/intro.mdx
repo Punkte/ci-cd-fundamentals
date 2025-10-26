@@ -1,8 +1,9 @@
 ---
-title: Créer un projet simple
+title: Créer un projet
 ---
 
 
+### Initialisation
 Nous allons utiliser `vite` pour créer un projet simple.     
 
 ```bash
@@ -57,5 +58,122 @@ $ cat test-vite/package.json
     "vite": "npm:rolldown-vite@7.1.14"
   }
 }
+```
 
+
+### Qualité de code
+
+#### Lint 
+Ajoutons un outil qui permet de linter notre code.     
+
+```bash
+$ npm install -D oxlint
+```
+
+
+et ajoutons une config de base dans un fichier `.oxlintrc.json`:    
+
+
+```json
+{
+  "rules": {
+    "no-console": "error"
+  },
+  "overrides": [
+    {
+      "files": ["script/*.js"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["**/*.{ts,tsx}"],
+      "plugins": ["typescript"],
+      "rules": {
+        "typescript/no-explicit-any": "error"
+      }
+    },
+    {
+      "files": ["**/test/**"],
+      "plugins": ["vitest"],
+      "env": {
+        "vitest": true
+      },
+      "rules": {
+        "vitest/no-disabled-tests": "error"
+      }
+    }
+  ]
+}
+```
+
+
+enfin ajoutons un alias pour lancer la commande de lint dans le fichier `package.json` dans la partie script
+
+
+```json
+{
+  "scripts": {
+    // ...
+    "lint": "oxlint" // [!code highlight]
+  }
+}
+
+```
+
+
+#### Tests
+Pour que notre pipeline d'intégration continue soit complète, nous avons besoin d'une étape qui valide le comportement de notre code.  
+Nous allons utiliser vitest, un framework de test moderne intégré à l'écosystème Vite.    
+
+```bash
+$ npm install -D vitest
+```
+
+
+Mettons à jour notre package.json pour ajouter le script de test :
+```json
+{
+  "scripts": {
+    // ...
+    "test": "vitest" // [!code highlight]
+  }
+}
+```
+
+Pour que notre pipeline ait quelque chose à exécuter, créons un test simple.
+
+Ajoutons un fichier src/sum.ts :
+
+```ts
+export function sum(a: number, b: number): number {
+  return a + b;
+}
+```
+
+
+Et le test correspondant `test/sum.test.ts` :
+
+```ts
+import {describe, expect, it} from 'vitest'
+import {sum} from '../src/sum'
+
+describe('sum', () => {
+  it('should add two number', () => {
+    // Given
+    const a = 10;
+    const b = 20;
+
+    // When
+    const result = sum(a, b)
+
+    // Then
+    expect(result).toEqual(30)
+  })
+})
+```
+
+On peut lancer notre commande pour s'assurer que tout va bien:   
+```bash
+$ npm test
 ```

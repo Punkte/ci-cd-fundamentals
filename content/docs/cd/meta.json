@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "docker",
+    "dockerfile"
+  ],
+  "defaultOpen": true,
+  "title": "CD"
+}

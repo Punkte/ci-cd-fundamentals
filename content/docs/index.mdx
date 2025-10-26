@@ -17,11 +17,11 @@ Pour cela, on divise le processus en deux grandes boucles, comme le montre ce sc
 ![Boucle CI/CD](/assets/ci-cd-loop.webp)
 
 1. La Boucle de Gauche : CI (Continuous Integration)
-C'est la boucle de vérification. Son travail est de répondre à la question : "Est-ce que le code qu'on vient de pousser est de bonne qualité et ne casse rien ?".
+C'est la boucle de vérification. Son rôle est de répondre à la question : "Est-ce que le code qu'on vient de pousser est de bonne qualité et ne casse rien ?".
 
-- Code : Un développeur pousse son code (git push).
-- Build : Le serveur de CI compile le code, installe les dépendances (ex: npm install).
-- Test : Le serveur lance les tests unitaires, le linting, etc. (ex: npm test).
+- Code : Un développeur push son code.
+- Build : Le serveur de CI compile le code, installe les dépendances.
+- Test : Le serveur lance les tests unitaires, le linting, etc.
 
 Si cette boucle échoue, le développeur reçoit un feedback immédiat (un email, un Slack) et doit corriger son code. C'est le "feedback rapide".
 

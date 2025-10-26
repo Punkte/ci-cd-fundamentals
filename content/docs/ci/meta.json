@@ -1,6 +1,9 @@
 {
   "pages": [
-    "intro"
+    "intro",
+    "security",
+    "github",
+    "gitlab"
   ],
   "defaultOpen": true,
   "title": "CI"
