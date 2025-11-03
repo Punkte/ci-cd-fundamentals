@@ -1,7 +1,6 @@
 {
   "pages": [
     "intro",
-    "security",
     "github",
     "gitlab"
   ],

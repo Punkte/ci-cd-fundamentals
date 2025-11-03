@@ -1,0 +1,111 @@
+---
+title: Déploiement
+---
+
+# Automatiser le Build Docker
+
+Nous avons un Dockerfile qui fonctionne en local, mais l'objectif est que notre CI s'en charge.  
+Notre pipeline doit maintenant, sur la branche main, non seulement tester le code, mais aussi construire l'image Docker et la pousser (publier) sur Docker Hub.  
+
+Pour cela, nous avons besoin de deux choses :
+- Donner à GitHub Actions nos identifiants Docker Hub de manière sécurisée.
+- Créer un nouveau job `build-and-push` qui utilise des actions spécialisées.
+
+1. Configurer les Secrets pour Docker Hub
+
+Notre pipeline a besoin de se connecter à Docker Hub. Nous n'allons jamais écrire notre mot de passe en clair dans le YAML.
+Allez dans les Settings (Paramètres) de votre dépôt.
+Allez dans Secrets and variables > Actions.
+
+Cliquez sur New repository secret et ajoutez les secrets suivants :
+- `DOCKER_USERNAME`  
+  Valeur : Votre nom d'utilisateur Docker Hub (ex: johndoe).
+
+- `DOCKERHUB_TOKEN`  
+  Valeur : Un Access Token que vous avez généré sur Docker Hub. (N'utilisez pas votre mot de passe principal).
+
+- `DOCKERHUB_PROJECT_NAME`  
+  Valeur : Le nom que vous voulez donner à votre image sur Docker Hub (ex: calculatrice).
+
+2. Mettre à jour la Pipeline 
+
+Nous allons maintenant ajouter un nouveau job build à notre workflow. Ce job s'exécutera après les tests (pour être sûr que le code est valide) mais avant le déploiement.
+
+Voici l'intégralité du fichier `ci.yml` mis à jour. 
+
+```yaml
+name: CI — Vite
+on: [push]
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+  test-and-lint:
+    runs-on: ubuntu-latest
+    name: Test & Lint
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
+      - name: Run tests
+        env:
+          CI: true
+        run: npm test
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps: 
+      - uses: actions/checkout@v4
+
+      - name: Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+      - name: Build and push production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+        
+  deploy:
+    name: Deploy to Render
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+```

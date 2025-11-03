@@ -1,7 +1,10 @@
 {
   "pages": [
     "docker",
-    "dockerfile"
+    "dockerfile",
+    "exercise",
+    "security",
+    "deploy"
   ],
   "defaultOpen": true,
   "title": "CD"

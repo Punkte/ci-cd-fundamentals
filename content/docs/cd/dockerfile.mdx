@@ -74,7 +74,6 @@ Si vous ouvrez `http://localhost:3002`, ça marche. Alors, où est le problème 
 
 Stoppons le container et supprimons le:   
 
-```
 **Nettoyage :**
 ```bash
 $ docker stop react-naive-container && docker rm react-naive-container
@@ -88,6 +87,7 @@ Dans un fichier `Dockerfile`:
 
 
 ```docker
+# On construit les artéfacts de build dans ce stage
 FROM node:24 as build
 
 WORKDIR /usr/src/app
@@ -100,6 +100,7 @@ COPY . .
 
 RUN npm run build
 
+# Stage final
 FROM nginx:1.29.2
 
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html

@@ -1,0 +1,85 @@
+---
+title: Sécurité et Environnements
+---
+
+Dans ce chapitre nous allons nous concentrer sur l'environnement Github Actions. Déso si vous utilisiez Gitlab sur le projet précédent.  
+
+Un secret (token, clé API) qui fuite dans un log est un désastre de sécurité. On ne doit jamais hardcoder de secrets. Mais comment la pipeline y accède-t-elle ?    
+
+
+## Secrets vs Variables
+
+- `secrets` (ex: `secrets.MY_TOKEN`) : Écriture unique. Ne peuvent pas être lus (s'affichent en *** dans les logs). Conçus pour les clés API, mots de passe.
+- `vars` (ex: `vars.MY_SETTING`) : Nouveauté GitHub. Peuvent être lus. Conçus pour des configurations non sensibles (ex: un nom de projet, une URL de staging).
+
+## Les Environnements
+
+On ne veut pas qu'une pipeline lancée depuis une branche "feature-fix-bug" puisse déployer en production.      
+Github peremet de créer des environnement.  
+Un environnement est une "boîte" qui combine deux choses :
+- Des "protection rules" (ex: "Seule la branche main peut utiliser cette boîte").
+- Des `secrets` et `variables` qui lui sont propres
+
+
+
+### Créer un Environnement "Production"
+Nous allons sécuriser un déploiement pour qu'il ne puisse être déclenché que depuis la branche main.     
+
+Pour se faire nous allons 
+
+#### 1. Créer l'Environnement dans GitHub
+
+- Allez dans les settings (Paramètres) de votre repo.
+- Cliquez sur Environments.
+- Cliquez sur New environment.
+- Nommez-le : `production`.
+
+#### 2. Ajouter des Règles de Protection
+
+Une fois l'environnement créé, vous pouvez ajouter des règles. La plus importante est :
+- Allowed branches (Branches autorisées) : Cochez cette règle et sélectionnez `main`.
+
+
+Désormais, toute tentative d'utiliser cet environnement depuis une autre branche sera automatiquement bloquée.
+
+
+#### 3. Ajouter un Secret d'Environnement
+
+En bas de la page de l'environnement production, vous avez une section "Environment secrets".
+Cliquez sur Add secret.
+Nommez-le (par exemple) `RENDER_DEPLOY_HOOK`.
+
+
+Collez votre secret de déploiement ici.
+Ce secret n'est accessible que par un job qui utilise spécifiquement l'environnement production.
+
+
+
+
+
+#### 4. Utiliser l'Environnement dans le Workflow YAML
+
+Maintenant, modifions notre `ci.yml` pour qu'il utilise cet environnement. Seul le job deploy a besoin d'être modifié.
+
+
+```yaml
+jobs:
+  # ... 
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build 
+
+    # C'est la ligne qui permet de ne lancer ce job que selon les conditions de `production` :
+    environment: production
+
+    # Cette condition est une double sécurité :
+    # Elle évite de lancer le job inutilement sur d'autres branches.
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+````
