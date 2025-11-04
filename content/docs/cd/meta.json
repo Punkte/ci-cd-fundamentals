@@ -4,7 +4,8 @@
     "dockerfile",
     "exercise",
     "security",
-    "deploy"
+    "deploy",
+    "after-deploy"
   ],
   "defaultOpen": true,
   "title": "CD"

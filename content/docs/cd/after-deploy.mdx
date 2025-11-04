@@ -1,0 +1,54 @@
+---
+title: La vie de la prod
+---
+
+
+Jusqu'à présent, notre définition du "succès" était une pipeline verte. Mais que se passe-t-il après ? Le déploiement n'est pas la fin, c'est le début de la "vraie vie" de l'application.    
+
+Que se passe-t-il si :
+
+- L'application crashe à 3h du matin ?
+- Une route spécifique renvoie une erreur 500 pour 10% des utilisateurs ?
+- L'application est lente ?
+
+On ne va pas ssh dans un conteneur Render pour lire des console.log. On doit mettre en place une stratégie d'observabilité. C'est ce que vous devrez implémenter dans votre projet final.
+
+## Healthcheck
+
+Une plateforme moderne (comme Render ou Kubernetes) a besoin de savoir si votre application est "en vie". C'est ce qu'on appelle un "Health Check".  
+
+C'est une route simple, `GET /healthz`, que la plateforme appelle toutes les 30 secondes.
+
+Si elle répond 200 OK, tout va bien.
+
+Si elle ne répond pas (ou renvoie 500), la plateforme sait que l'application est plantée et la redémarre automatiquement.  
+
+C'est aussi la clé des déploiements "zero-downtime" : la plateforme attend que cette route réponde OK sur la nouvelle version avant de basculer le trafic.
+
+## Error tracking    
+
+
+Quand votre application plante en production, `console.log(error)` ne sert à rien. Vous n'avez aucun contexte.
+
+Un "Error Tracker" est un service qui agit comme une "boîte noire" pour votre application. Il capture chaque erreur, avec le contexte complet :
+
+- La stack trace exacte.
+- Le navigateur de l'utilisateur.
+- L'OS, l'IP (anonymisée).
+- Les actions qui ont mené au crash.
+
+Un des outils qui permet de monitorer tout celà est Sentry.    
+
+
+## Profiling
+
+
+Sentry nous dit qu'une route est lente. Mais il ne nous dit pas pourquoi. Est-ce une requête BDD ? Une boucle for ? Une librairie de parsing JSON ?
+
+Pour répondre à "Où est-ce que mon application passe son temps CPU ?", on a besoin d'un profileur.
+
+Le profiling continu (comme Grafana Pyroscope) est un outil qui "observe" en permanence votre application en production et vous montre quelles fonctions consomment le plus de CPU.
+
+
+
+Analysons ensemble [ce repo github](https://github.com/Punkte/fastify-example)
