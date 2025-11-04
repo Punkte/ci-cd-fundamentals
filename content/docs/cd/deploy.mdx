@@ -73,11 +73,20 @@ jobs:
         env:
           CI: true
         run: npm test
+```
+
+En parallèle on aura aussi un fichier `cd.yml` pour gérer la déploiement de l'application
+```yaml
+name: Build and Push Docker Image on Tag
+on:
+  push:
+    tags:
+      - '*'
+jobs:
   build:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     environment: production
-    if: github.ref == 'refs/heads/main'
     steps: 
       - uses: actions/checkout@v4
 
@@ -95,17 +104,16 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:${{ github.ref_name }}
             ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
-        
   deploy:
     name: Deploy to Render
     needs: build
     runs-on: ubuntu-latest
     environment: production
-    if: github.ref == 'refs/heads/main'
     steps:
       - name: Trigger Render Deploy Hook
         run: |
-          curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+          curl ${{ secrets.RENDER_DEPLOY_HOOK }}&imgURL=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:${{ github.ref_name }}
 ```

@@ -2,7 +2,8 @@
   "pages": [
     "intro",
     "github",
-    "gitlab"
+    "gitlab",
+    "testing"
   ],
   "defaultOpen": true,
   "title": "CI"

@@ -1,0 +1,39 @@
+---
+title: Tests
+---
+
+# La Pyramide des Tests
+
+Tous les tests n'ont pas le même objectif, le même coût, ni la même vitesse d'exécution. Écrire uniquement des tests "de bout en bout" (End-to-End) est aussi une mauvaise idée que de n'écrire que des tests unitaires.
+
+Pour équilibrer nos efforts, on utilise un modèle simple : la Pyramide des Tests.
+
+![Image de la pyramide des tests](/assets/testing-pyramid.webp)
+
+L'idée est simple : plus vous êtes bas dans la pyramide, plus vos tests doivent être nombreux, rapides et simples.
+
+## Tests Unitaires (Unit Tests)
+
+Objectif : Valider une seule unité de code (une fonction, une classe) en isolation totale.
+
+Exemple : `sum(2, 2)` doit retourner `4`.
+
+## Tests d'Intégration (Integration Tests)
+
+Objectif : Valider que deux ou plusieurs unités de code fonctionnent ensemble.
+
+Exemple : Est-ce que ma route API POST `/todos` appelle correctement mon TodoService et fait insert en base de données ?
+
+## Tests de Bout-en-Bout (End-to-End / E2E)
+
+Objectif : Valider un parcours utilisateur complet depuis l'interface graphique, comme le ferait un humain.
+
+Exemple : "L'utilisateur ouvre la page, clique sur 'Ajouter', remplit le formulaire, clique sur 'Valider' et vérifie que le nouveau todo apparaît dans la liste."
+
+##   La Stratégie
+
+Une pipeline de CI/CD robuste exécute ces différents types de tests.
+
+On exécute les Tests Unitaires (rapides) sur chaque push de chaque branche pour un feedback immédiat.
+
+On exécute les Tests E2E (lents) plus rarement, par exemple uniquement sur les Pull Requests ou avant un déploiement sur main.
