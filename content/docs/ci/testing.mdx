@@ -18,17 +18,70 @@ Objectif : Valider une seule unité de code (une fonction, une classe) en isolat
 
 Exemple : `sum(2, 2)` doit retourner `4`.
 
+
+```typescript
+import {describe, expect, it} from 'vitest'
+
+describe('add', () => {
+  it('should add two numbers', () => {
+    expect(1 + 1).toEqual(2)
+  })
+})
+```
+
 ## Tests d'Intégration (Integration Tests)
 
 Objectif : Valider que deux ou plusieurs unités de code fonctionnent ensemble.
 
 Exemple : Est-ce que ma route API POST `/todos` appelle correctement mon TodoService et fait insert en base de données ?
 
+Ou alors est ce que mon composant se comporte bien lorsqu'un clic a lieu:   
+```typescript
+import {render, screen} from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import '@testing-library/jest-dom'
+import Fetch from './fetch'
+
+test('loads and displays greeting', async () => {
+  // ARRANGE
+  render(<Fetch url="/greeting" />)
+
+  // ACT
+  await userEvent.click(screen.getByText('Load Greeting'))
+  await screen.findByRole('heading')
+
+  // ASSERT
+  expect(screen.getByRole('heading')).toHaveTextContent('hello there')
+  expect(screen.getByRole('button')).toBeDisabled()
+})
+```
+
 ## Tests de Bout-en-Bout (End-to-End / E2E)
 
 Objectif : Valider un parcours utilisateur complet depuis l'interface graphique, comme le ferait un humain.
 
 Exemple : "L'utilisateur ouvre la page, clique sur 'Ajouter', remplit le formulaire, clique sur 'Valider' et vérifie que le nouveau todo apparaît dans la liste."
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('has title', async ({ page }) => {
+  await page.goto('https://playwright.dev/');
+
+  // Expect a title "to contain" a substring.
+  await expect(page).toHaveTitle(/Playwright/);
+});
+
+test('get started link', async ({ page }) => {
+  await page.goto('https://playwright.dev/');
+
+  // Click the get started link.
+  await page.getByRole('link', { name: 'Get started' }).click();
+
+  // Expects page to have a heading with the name of Installation.
+  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+});
+```
 
 ##   La Stratégie
 
